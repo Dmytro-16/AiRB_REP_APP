@@ -6,6 +6,8 @@ export default function Input({
   placeholder,
   multiline,
   secureTrue,
+  keyboardType,
+  autoCapitalize,
 }) {
   return (
     // Composant réutilisable pour tous les champs
@@ -16,6 +18,8 @@ export default function Input({
       style={multiline ? [styles.input, styles.multiline] : styles.input}
       multiline={multiline}
       secureTextEntry={secureTrue}
+      keyboardType={keyboardType}
+      autoCapitalize={autoCapitalize}
     />
   );
 }
@@ -23,12 +27,14 @@ export default function Input({
 const styles = StyleSheet.create({
   input: {
     borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.2)",
     paddingVertical: 3,
     paddingHorizontal: 3,
     height: 30,
   },
   multiline: {
     borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.2)",
     height: 100,
   },
 });

@@ -20,8 +20,7 @@ export const AuthContextProvider = ({ children }) => {
   const logOut = async () => {
     setUserId("");
     setUserToken("");
-    await AsyncStorage.removeItemItem("");
-    await AsyncStorage.removeItem("");
+    await AsyncStorage.multiRemove(["token", "id"]);
   };
 
   useEffect(() => {

@@ -9,12 +9,12 @@ export default function RootNavigation() {
     <Stack>
       {/* ROOT PROTECTED NON CONNECT > AUTH */}
       <Stack.Protected guard={!userToken}>
-        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
 
       {/* ROOT PROTECTED CONNECT > MAIN */}
       <Stack.Protected guard={userToken}>
-        <Stack.Screen name="main" />
+        <Stack.Screen name="main" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
   );

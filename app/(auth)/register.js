@@ -5,12 +5,13 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Constant from "expo-constants";
 import axios from "axios";
+import API_BASE_URL from "../../constants/api";
 
 // Composant réutilisable pour tous les champs
 import Input from "../../components/Input";
@@ -22,125 +23,203 @@ export default function SignupScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
   const handleSubmit = async () => {
-    // console.log({ email, username, description, password, confirmPassword });
+    if (!email.trim() || !username.trim() || !description.trim() || !password.trim()) {
+      setErrorMessage("Tous les champs doivent être remplis");
+      return;
+    }
 
-    if (email && username && description && password && confirmPassword) {
-      // Si les champs sont tous remplis
-      if (confirmPassword === password) {
-        // Si les mot de passe sont identiques
-        try {
-          const { data } = await axios.post(
-            "https://lereacteur-bootcamp-api.herokuapp.com/api/airbnb/user/sign_up",
-            {
-              email,
-              username,
-              description,
-              password,
-            },
-          );
+    if (confirmPassword !== password) {
+      setErrorMessage("Les mots de passe doivent etre identiques");
+      return;
+    }
 
-          console.log(data);
+    setErrorMessage("");
+    setIsLoading(true);
 
-          if (data.id && data.token) {
-            // Si on reçoit un id et token on estime que le user est créé
-            alert("user créé");
-          } else {
-            setErrorMessage("Une erreur est survenue");
-          }
-        } catch (error) {
-          console.log("catch>>", error);
-          setErrorMessage(error.message);
-        }
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/user/sign_up`,
+        {
+          email: email.trim(),
+          username: username.trim(),
+          description: description.trim(),
+          password: password.trim(),
+        },
+      );
+
+      if (data.id && data.token) {
+        alert("Compte cree avec succes");
+        router.replace("/");
       } else {
-        setErrorMessage("Les mots de passe doivent être identique");
+        setErrorMessage("Une erreur est survenue");
       }
-    } else {
-      setErrorMessage("Tous les chmaps doivent être rempli");
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.error || error.message || "Erreur d'inscription",
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       <Image source={require("../../images/Logo.jpg")} style={styles.logo} />
 
-      <Text>Sign Up</Text>
+      <Text style={styles.title}>Sign Up</Text>
+      <Text style={styles.subtitle}>Create your account</Text>
 
-      <View style={styles.form}>
-        <Input
-          placeholder="toto@mail.com"
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-        />
-        <Input
-          placeholder="toto"
-          value={username}
-          onChangeText={(text) => setUsername(text)}
-        />
-        <Input
-          placeholder="description"
-          value={description}
-          onChangeText={(text) => setDescription(text)}
-          multiline={true}
-        />
-        <Input
-          placeholder="pass"
-          value={password}
-          onChangeText={(text) => setPassword(text)}
-          secureTrue={true}
-        />
-        <Input
-          placeholder="pass"
-          value={confirmPassword}
-          onChangeText={(text) => setConfirmPassword(text)}
-          secureTrue={true}
-        />
+      <View style={styles.authCard}>
+        <View style={styles.form}>
+          <Input
+            placeholder="Email"
+            value={email}
+            onChangeText={(text) => setEmail(text)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <Input
+            placeholder="Username"
+            value={username}
+            onChangeText={(text) => setUsername(text)}
+            autoCapitalize="none"
+          />
+          <Input
+            placeholder="Description"
+            value={description}
+            onChangeText={(text) => setDescription(text)}
+          />
+          <Input
+            placeholder="Password"
+            value={password}
+            onChangeText={(text) => setPassword(text)}
+            secureTrue={true}
+          />
+          <Input
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChangeText={(text) => setConfirmPassword(text)}
+            secureTrue={true}
+          />
+        </View>
+
+        {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
+
+        <TouchableOpacity
+          onPress={handleSubmit}
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign Up</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => {
+            router.push("/");
+          }}
+        >
+          <Text style={styles.signupText}>
+            Already have an account ? Sign In
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <Text>{errorMessage}</Text>
-
-      <TouchableOpacity onPress={handleSubmit}>
-        <Text>Sign Up</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => {
-          router.push("/");
-        }}
-      >
-        <Text>Already have an account ? Sign In</Text>
-      </TouchableOpacity>
     </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
-    paddingTop: Constant.statusBarHeight + 50,
+    paddingTop: Constant.statusBarHeight + 20,
+    paddingBottom: 26,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff5f8",
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 120,
+    height: 120,
     resizeMode: "contain",
+    marginBottom: 24,
+    borderRadius: 70,
+    backgroundColor: "#ffffff",
+    padding: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
-
-  form: {
-    gap: 10,
-    marginVertical: 30,
+  title: {
+    fontSize: 34,
+    fontWeight: "bold",
+    color: "#ff3e61",
+    marginTop: 10,
+    marginBottom: 6,
   },
-  input: {
-    borderBottomWidth: 1,
-    paddingVertical: 3,
-    paddingHorizontal: 3,
-    height: 30,
+  subtitle: {
+    fontSize: 15,
+    color: "#6d6d6d",
+    marginBottom: 16,
   },
-  multiline: {
+  authCard: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
     borderWidth: 1,
-    height: 100,
+    borderColor: "#ffe4eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  form: {
+    width: "100%",
+    gap: 12,
+    marginBottom: 14,
+  },
+  button: {
+    backgroundColor: "#ff3e61",
+    paddingVertical: 15,
+    borderRadius: 40,
+    width: "100%",
+    marginTop: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+    textAlign: "center",
+  },
+  error: {
+    color: "#ff3e61",
+    marginBottom: 4,
+    fontSize: 13,
+    textAlign: "center",
+  },
+  signupText: {
+    color: "#ff3e61",
+    fontWeight: "600",
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 2,
   },
 });

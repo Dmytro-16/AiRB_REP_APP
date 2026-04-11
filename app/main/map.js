@@ -1,13 +1,15 @@
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Pressable } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import * as Location from "expo-location";
 import { router } from "expo-router";
+import API_BASE_URL from "../../constants/api";
 
 export default function MapScreen() {
   const [coords, setCoords] = useState(null); // Ma position
   const [markers, setMarkers] = useState([]); // Positions des logements
+  const [selectedMarker, setSelectedMarker] = useState(null);
   const [error, setError] = useState(null); // Erreur
   const [isLoading, setIsLoading] = useState(true); // Chargement
 
@@ -34,7 +36,7 @@ export default function MapScreen() {
       // 3️⃣ Appel API pour récupérer logements autour
       try {
         const { data } = await axios.get(
-          "https://lereacteur-bootcamp-api.herokuapp.com/api/airbnb/rooms",
+          `${API_BASE_URL}/rooms`,
           {
             params: {
               latitude: initialCoords.latitude,
@@ -51,6 +53,14 @@ export default function MapScreen() {
             latitude: Number(lat),
             longitude: Number(lng),
             title: room.title,
+            price: room.price,
+            reviews: room.reviews,
+            ratingValue: room.ratingValue,
+            description: room.description,
+            picture: room.photos?.[0]?.url || "https://www.gravatar.com/avatar/?d=mp",
+            hostPhoto:
+              room.user?.account?.photo?.url || "https://www.gravatar.com/avatar/?d=mp",
+            hostName: room.user?.account?.username || "Host",
           };
         });
 
@@ -67,55 +77,189 @@ export default function MapScreen() {
 
   if (isLoading || !coords) {
     return (
-      <ActivityIndicator
-        style={styles.indicator}
-        size="large"
-        color="#ff3e61"
-      />
+      <View style={styles.screenState}>
+        <ActivityIndicator style={styles.indicator} size="large" color="#ff3e61" />
+        <Text style={styles.stateText}>Chargement de la carte...</Text>
+      </View>
     );
   }
 
   if (error) {
-    return <Text>{error}</Text>;
+    return (
+      <View style={styles.screenState}>
+        <Text style={styles.errorTitle}>Impossible d'afficher la carte</Text>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
   }
 
   return (
-    <MapView
-      style={{ flex: 1 }}
-      region={{
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      }}
-      showsUserLocation={true} // Affiche ma position
-      followsUserLocation={true} // La carte suit le mouvement de la position
-    >
-      {/* Marker de ta position */}
-      <Marker coordinate={coords} pinColor="green" title="Vous êtes ici" />
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        region={{
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showsUserLocation={true}
+        followsUserLocation={true}
+        onPress={() => setSelectedMarker(null)}
+      >
+        <Marker coordinate={coords} pinColor="green" title="Vous etes ici" />
 
-      {/* Markers des logements */}
-      {markers.map((marker) => (
-        // console.log(marker),
-        <Marker
-          key={marker.id}
-          coordinate={{
-            latitude: marker.latitude,
-            longitude: marker.longitude,
-          }}
-          title={marker.title}
-          pinColor="red"
-          onPress={() => router.push(`/room/${marker.id}`)}
-        />
-      ))}
-    </MapView>
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            coordinate={{
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }}
+            title={marker.title}
+            pinColor="#ff3e61"
+            onPress={() => setSelectedMarker(marker)}
+          />
+        ))}
+      </MapView>
+
+      <View style={styles.overlayCard}>
+        <Text style={styles.overlayTitle}>Explorer</Text>
+        <Text style={styles.overlaySubtitle}>{markers.length} logements autour</Text>
+      </View>
+
+      {!!selectedMarker && (
+        <View style={styles.markerCard}>
+          <Text numberOfLines={1} style={styles.markerCardTitle}>
+            {selectedMarker.title}
+          </Text>
+          <Text style={styles.markerCardMeta}>
+            {selectedMarker.price} EUR - {selectedMarker.ratingValue} etoiles
+          </Text>
+          <Pressable
+            style={styles.markerCardButton}
+            onPress={() =>
+              router.push({
+                pathname: "main/home/room",
+                params: {
+                  id: selectedMarker.id,
+                  description: selectedMarker.description,
+                  title: selectedMarker.title,
+                  price: selectedMarker.price,
+                  reviews: selectedMarker.reviews,
+                  ratingValue: selectedMarker.ratingValue,
+                  picture_id: selectedMarker.picture,
+                  photoUser: selectedMarker.hostPhoto,
+                  name: selectedMarker.hostName,
+                },
+              })
+            }
+          >
+            <Text style={styles.markerCardButtonText}>Voir les details</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  indicator: {
+  container: {
+    flex: 1,
+    backgroundColor: "#fff5f8",
+  },
+  map: {
+    flex: 1,
+  },
+  screenState: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#fff5f8",
+    paddingHorizontal: 20,
+  },
+  indicator: {
+    marginBottom: 12,
+  },
+  stateText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#ff3e61",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  errorText: {
+    color: "#666",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  overlayCard: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#ffe4eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  overlayTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2b2b2b",
+  },
+  overlaySubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    color: "#666",
+  },
+  markerCard: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 20,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#ffe4eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  markerCardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2b2b2b",
+    marginBottom: 4,
+  },
+  markerCardMeta: {
+    color: "#666",
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  markerCardButton: {
+    backgroundColor: "#ff3e61",
+    borderRadius: 999,
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  markerCardButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });
