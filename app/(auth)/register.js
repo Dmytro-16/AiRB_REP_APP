@@ -69,7 +69,12 @@ export default function SignupScreen() {
 
   return (
     <KeyboardAwareScrollView
+      style={styles.scroll}
       contentContainerStyle={styles.container}
+      enableOnAndroid={true}
+      keyboardShouldPersistTaps="handled"
+      extraScrollHeight={70}
+      extraHeight={140}
       showsVerticalScrollIndicator={false}
     >
       <Image source={require("../../images/Logo.jpg")} style={styles.logo} />
@@ -140,11 +145,15 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: "#fff5f8",
+  },
   container: {
     flexGrow: 1,
     alignItems: "center",
     paddingTop: Constant.statusBarHeight + 20,
-    paddingBottom: 26,
+    paddingBottom: 80,
     paddingHorizontal: 20,
     backgroundColor: "#fff5f8",
   },
@@ -187,6 +196,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
+    marginBottom: 16,
   },
   form: {
     width: "100%",

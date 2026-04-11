@@ -60,7 +60,15 @@ export default function LoginPage() {
   };
 
   return (
-    <KeyboardAwareScrollView contentContainerStyle={styles.container}>
+    <KeyboardAwareScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      enableOnAndroid={true}
+      keyboardShouldPersistTaps="handled"
+      extraScrollHeight={70}
+      extraHeight={120}
+      showsVerticalScrollIndicator={false}
+    >
       <Image source={require("../../images/Logo.jpg")} style={styles.logo} />
 
       <Text style={styles.title}>Log In</Text>
@@ -110,10 +118,15 @@ export default function LoginPage() {
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: "#fff5f8",
+  },
   container: {
     flexGrow: 1,
     alignItems: "center",
     paddingTop: Constant.statusBarHeight + 30,
+    paddingBottom: 70,
     paddingHorizontal: 20,
     backgroundColor: "#fff5f8",
   },
@@ -156,6 +169,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
+    marginBottom: 14,
   },
   form: {
     width: "100%",
