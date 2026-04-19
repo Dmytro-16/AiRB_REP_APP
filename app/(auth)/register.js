@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import Constant from "expo-constants";
 import axios from "axios";
@@ -26,6 +26,7 @@ export default function SignupScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
+  const { logIn } = useContext(AuthContext);
 
   const handleSubmit = async () => {
     if (!email.trim() || !username.trim() || !description.trim() || !password.trim()) {
@@ -52,7 +53,12 @@ export default function SignupScreen() {
         },
       );
 
-      if (data.id && data.token) {
+      const userId = data.id ?? data._id;
+      const nameFromApi =
+        data.account?.username ?? data.username ?? username.trim();
+
+      if (userId && data.token) {
+        await logIn(data.token, userId, nameFromApi);
         alert("Compte cree avec succes");
         router.replace("/");
       } else {

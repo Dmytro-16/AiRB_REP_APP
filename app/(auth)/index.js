@@ -44,9 +44,12 @@ export default function LoginPage() {
         },
       );
 
-      if (data.id && data.token) {
-        // On enregistre le token et l'id de l'utilisateur dans le contexte.
-        await logIn(data.token, data.id);
+      const userId = data.id ?? data._id;
+      const displayName =
+        data.account?.username ?? data.username ?? "";
+
+      if (userId && data.token) {
+        await logIn(data.token, userId, displayName);
       } else {
         setErrorMessage("Une erreur est survenue");
       }

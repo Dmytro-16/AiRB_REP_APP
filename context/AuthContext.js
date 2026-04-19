@@ -7,20 +7,25 @@ export const AuthContext = createContext();
 export const AuthContextProvider = ({ children }) => {
   const [userToken, setUserToken] = useState("");
   const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
 
   // Fonction pour connecter un utilisateur
-  const logIn = async (token, id) => {
+  const logIn = async (token, id, username = "") => {
     setUserId(id);
     setUserToken(token);
+    const name = typeof username === "string" ? username.trim() : "";
+    setUserName(name);
     await AsyncStorage.setItem("token", token);
     await AsyncStorage.setItem("id", id);
+    await AsyncStorage.setItem("username", name);
   };
 
   // Fonction pour déconnecter un utilisateur
   const logOut = async () => {
     setUserId("");
     setUserToken("");
-    await AsyncStorage.multiRemove(["token", "id"]);
+    setUserName("");
+    await AsyncStorage.multiRemove(["token", "id", "username"]);
   };
 
   useEffect(() => {
@@ -29,9 +34,11 @@ export const AuthContextProvider = ({ children }) => {
         // on va chercher dans les clés userId et userToken
         const token = await AsyncStorage.getItem("token");
         const id = await AsyncStorage.getItem("id");
+        const storedName = await AsyncStorage.getItem("username");
         if (token && id) {
           setUserToken(token);
           setUserId(id);
+          setUserName(storedName || "");
         }
       } catch (error) {
         console.log("Error, AsyncStorage request", error);
@@ -41,7 +48,9 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ userId, userToken, logOut, logIn }}>
+    <AuthContext.Provider
+      value={{ userId, userToken, userName, logOut, logIn }}
+    >
       {children}
     </AuthContext.Provider>
   );

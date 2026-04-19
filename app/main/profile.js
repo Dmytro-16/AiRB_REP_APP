@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
 export default function ProfileScreen() {
-  const { logOut, userId } = useContext(AuthContext);
+  const { logOut, userId, userName } = useContext(AuthContext);
 
   return (
     <View style={styles.container}>
@@ -16,7 +16,9 @@ export default function ProfileScreen() {
           style={styles.avatar}
         />
 
-        <Text style={styles.name}>Utilisateur Airbnb</Text>
+        <Text style={styles.name}>
+          {userName || "Utilisateur"}
+        </Text>
         <Text style={styles.userId}>ID: {userId || "non disponible"}</Text>
 
         <Pressable
