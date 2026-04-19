@@ -12,6 +12,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import Constant from "expo-constants";
 import axios from "axios";
 import API_BASE_URL from "../../constants/api";
+import { AuthContext } from "../../context/AuthContext";
 
 // Composant réutilisable pour tous les champs
 import Input from "../../components/Input";

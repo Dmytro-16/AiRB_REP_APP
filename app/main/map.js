@@ -6,6 +6,11 @@ import * as Location from "expo-location";
 import { router } from "expo-router";
 import API_BASE_URL from "../../constants/api";
 
+const DEFAULT_COORDS = {
+  latitude: 48.8564449,
+  longitude: 2.4002913,
+};
+
 export default function MapScreen() {
   const [coords, setCoords] = useState(null); // Ma position
   const [markers, setMarkers] = useState([]); // Positions des logements
@@ -23,14 +28,28 @@ export default function MapScreen() {
         return;
       }
 
-      // 2️⃣ Récupère position initiale
-      let location = await Location.getCurrentPositionAsync({});
-      const initialCoords = {
-        // latitude: location.coords.latitude,
-        // longitude: location.coords.longitude,
-        latitude: 48.8564449,
-        longitude: 2.4002913,
-      };
+      let initialCoords = { ...DEFAULT_COORDS };
+      try {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        initialCoords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+      } catch {
+        try {
+          const last = await Location.getLastKnownPositionAsync({});
+          if (last?.coords) {
+            initialCoords = {
+              latitude: last.coords.latitude,
+              longitude: last.coords.longitude,
+            };
+          }
+        } catch {
+          // GPS / services desactives (emulateur, etc.) : carte centree sur Paris
+        }
+      }
       setCoords(initialCoords);
 
       // 3️⃣ Appel API pour récupérer logements autour
